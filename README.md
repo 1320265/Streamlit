@@ -1,2 +1,3 @@
-# Streamlit
-streamlit readme
+streamlit
+pandas
+streamlit-gsheets-connection
