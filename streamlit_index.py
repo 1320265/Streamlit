@@ -2,22 +2,37 @@ import streamlit as st
 import pandas as pd
 from streamlit_gsheets import GSheetsConnection 
 
-st.set_page_config(layout="wide")
-st.title("📊 Requisitos del Proyecto desde Google Sheets")
+# --- VARIABLES QUE DEBES REEMPLAZAR ---
 
-conn = st.connection("gsheets", type=GSheetsConnection)
+# 1. PEGA EL ID LARGO de tu hoja de cálculo (el mismo que has estado usando)
+spreadsheet_id = "https://docs.google.com/spreadsheets/d/1ffNb-jFqt9S0O2CaUQS59mleOkyOk911EaD2uDaMgVw/edit?gid=0#gid=0" 
 
-spreadsheet_id = "PEGA_AQUÍ_EL_ID_DE_TU_HOJA_DE_CÁLCULO" 
+# 2. NOMBRE ACTUALIZADO DE LA PESTAÑA
+WORKSHEET_NAME = "REPOSITORIO" 
+
+# --- CÓDIGO DE CONEXIÓN ---
+
+st.title("👥 Datos de REPOSITORIO desde Google Sheets")
 
 try:
-    df_requisitos = conn.read(
-        spreadsheet=spreadsheet_id,
-        worksheet="Hoja1",
+    # Conexión usando el Secret [gsheets]
+    conn = st.connection("gsheets", type=GSheetsConnection) 
+
+    # Lectura de la pestaña "REPOSITORIO"
+    df_datos = conn.read(
+        spreadsheet=SPREADSHEET_ID,
+        worksheet=WORKSHEET_NAME,
         ttl=5 
     )
 
-    st.subheader("Datos Cargados:")
-    st.dataframe(df_requisitos)
+    # Muestra los datos
+    st.subheader(f"Primer registro cargado: {df_datos.shape[0]} filas")
+    
+    # Muestra los datos en Streamlit
+    st.dataframe(df_datos)
+    
+    # Opcional: Muestra un valor específico para confirmar
+    st.write(f"Nombre del primer registro: **{df_datos['nombres'][0]}**")
 
 except Exception as e:
-    st.error(f"Error al leer Google Sheets. Revisa el ID de la hoja, el nombre de la pestaña y los permisos de la Cuenta de Servicio. Error: {e}")
+    st.error(f"¡Error! Revisa que el Secret, el ID y el nombre de la hoja ('{WORKSHEET_NAME}') sean correctos. Detalle: {e}")
