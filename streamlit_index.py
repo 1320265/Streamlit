@@ -1,13 +1,15 @@
 import streamlit as st
 import pandas as pd
+# Asegúrate de que esta librería esté en tu requirements.txt
 from streamlit_gsheets import GSheetsConnection 
 
-# --- VARIABLES QUE DEBES REEMPLAZAR ---
+# --- VARIABLES CORREGIDAS ---
 
-# 1. PEGA EL ID LARGO de tu hoja de cálculo (el mismo que has estado usando)
-spreadsheet_id = "https://docs.google.com/spreadsheets/d/1ffNb-jFqt9S0O2CaUQS59mleOkyOk911EaD2uDaMgVw/edit?gid=0#gid=0" 
+# 1. CORRECCIÓN: Se debe usar solo el ID, no la URL completa.
+# Tu ID extraído de la URL es: 1ffNb-jFqt9S0O2CaUQS59mleOkyOk911EaD2uDaMgVw
+SPREADSHEET_ID = "1ffNb-jFqt9S0O2CaUQS59mleOkyOk911EaD2uDaMgVw" 
 
-# 2. NOMBRE ACTUALIZADO DE LA PESTAÑA
+# 2. NOMBRE DE LA PESTAÑA: Correcto
 WORKSHEET_NAME = "REPOSITORIO" 
 
 # --- CÓDIGO DE CONEXIÓN ---
@@ -18,9 +20,9 @@ try:
     # Conexión usando el Secret [gsheets]
     conn = st.connection("gsheets", type=GSheetsConnection) 
 
-    # Lectura de la pestaña "REPOSITORIO"
+    # CORRECCIÓN: La variable SPREADSHEET_ID ahora se usa correctamente
     df_datos = conn.read(
-        spreadsheet=SPREADSHEET_ID,
+        spreadsheet=SPREADSHEET_ID, 
         worksheet=WORKSHEET_NAME,
         ttl=5 
     )
@@ -35,4 +37,5 @@ try:
     st.write(f"Nombre del primer registro: **{df_datos['nombres'][0]}**")
 
 except Exception as e:
+    # Mensaje de error más detallado
     st.error(f"¡Error! Revisa que el Secret, el ID y el nombre de la hoja ('{WORKSHEET_NAME}') sean correctos. Detalle: {e}")
