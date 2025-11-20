@@ -10,7 +10,7 @@ import os
 SPREADSHEET_ID = "1ffNb-jFqt9S0O2CaUQS59mleOkyOk911EaD2uDaMgVw" 
 # Nombre de la pestaña que contiene los datos de REPOSITORIO
 # 🛑 CORRECCIÓN: Usando el nombre de hoja confirmado por el usuario.
-WORKSHEET_NAME = "REPOSITORIO" 
+WORKSHEET_NAME = "hoja1" 
 
 st.set_page_config(layout="wide")
 st.title("👥 Datos de REPOSITORIO (Conexión Estable con gspread)")
