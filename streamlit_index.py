@@ -1,41 +1,81 @@
 import streamlit as st
 import pandas as pd
-# Asegúrate de que esta librería esté en tu requirements.txt
-from streamlit_gsheets import GSheetsConnection 
+import gspread 
+import tempfile
+import json
+import os 
 
-# --- VARIABLES CORREGIDAS ---
-
-# 1. CORRECCIÓN: Se debe usar solo el ID, no la URL completa.
-# Tu ID extraído de la URL es: 1ffNb-jFqt9S0O2CaUQS59mleOkyOk911EaD2uDaMgVw
+# --- VARIABLES DE CONFIGURACIÓN ---
+# ID de tu hoja de cálculo (reemplaza si es necesario)
 SPREADSHEET_ID = "1ffNb-jFqt9S0O2CaUQS59mleOkyOk911EaD2uDaMgVw" 
-
-# 2. NOMBRE DE LA PESTAÑA: Correcto
+# Nombre de la pestaña que contiene los datos de REPOSITORIO
 WORKSHEET_NAME = "REPOSITORIO" 
 
-# --- CÓDIGO DE CONEXIÓN ---
+st.set_page_config(layout="wide")
+st.title("👥 Datos de REPOSITORIO (Conexión Estable con gspread)")
 
-st.title("👥 Datos de REPOSITORIO desde Google Sheets")
+# Usamos @st.cache_data para guardar los datos en caché y evitar peticiones repetidas a Google
+@st.cache_data(ttl=5)
+def load_data():
+    temp_filepath = None
+    try:
+        # 1. AUTENTICACIÓN: Lee el contenido del Secret [gsheets]
+        if "gsheets" not in st.secrets:
+            st.error("Error: El secret [gsheets] no está configurado en Streamlit Cloud. Revisa que el nombre sea 'gsheets'.")
+            return pd.DataFrame()
+            
+        gcp_secrets = st.secrets["gsheets"]
 
-try:
-    # Conexión usando el Secret [gsheets]
-    conn = st.connection("gsheets", type=GSheetsConnection) 
+        # 2. CREACIÓN DE ARCHIVO TEMPORAL: gspread necesita el JSON de la clave en un archivo
+        # Esto es un patrón de seguridad estándar.
+        with tempfile.NamedTemporaryFile(mode="w", delete=False) as temp_json_file:
+            # Escribimos los secretos obtenidos en el archivo temporal
+            json.dump(gcp_secrets, temp_json_file)
+            temp_filepath = temp_json_file.name
 
-    # CORRECCIÓN: La variable SPREADSHEET_ID ahora se usa correctamente
-    df_datos = conn.read(
-        spreadsheet=SPREADSHEET_ID, 
-        worksheet=WORKSHEET_NAME,
-        ttl=5 
-    )
+        # 3. CONEXIÓN: Usa gspread para autenticarse con el archivo temporal
+        gc = gspread.service_account(filename=temp_filepath)
+        
+        # 4. ACCESO AL ARCHIVO: Abre la hoja por su ID
+        spreadsheet = gc.open_by_key(SPREADSHEET_ID)
+        
+        # 5. LECTURA: Selecciona la pestaña (worksheet)
+        worksheet = spreadsheet.worksheet(WORKSHEET_NAME)
+        
+        # 6. Conversión a DataFrame de Pandas (Lee la primera fila como encabezados)
+        data = worksheet.get_all_records()
+        df = pd.DataFrame(data)
+        
+        return df
 
-    # Muestra los datos
-    st.subheader(f"Primer registro cargado: {df_datos.shape[0]} filas")
+    except gspread.exceptions.WorksheetNotFound:
+        st.error(f"Error: La pestaña '{WORKSHEET_NAME}' no fue encontrada. Revisa que el nombre en Google Sheets sea EXACTO.")
+        return pd.DataFrame()
+    except gspread.exceptions.SpreadsheetNotFound:
+        st.error(f"Error: Hoja de cálculo con ID '{SPREADSHEET_ID}' no encontrada. Revisa el ID.")
+        return pd.DataFrame()
+    except Exception as e:
+        # Manejo de otros errores críticos
+        st.error(f"Error crítico en la conexión o autenticación. Causas comunes: 1) Formato TOML del secret incorrecto. 2) El email de la cuenta de servicio no tiene permiso de lectura en Google Sheets. Detalle: {e}")
+        return pd.DataFrame()
     
-    # Muestra los datos en Streamlit
+    finally:
+        # 7. LIMPIEZA: Eliminamos el archivo temporal (IMPORTANTE para la seguridad)
+        if temp_filepath and os.path.exists(temp_filepath):
+            os.remove(temp_filepath)
+
+# --- EJECUCIÓN ---
+
+st.info("Intentando cargar datos...")
+df_datos = load_data()
+
+if not df_datos.empty:
+    st.success(f"¡Conexión exitosa! {df_datos.shape[0]} filas cargadas desde {WORKSHEET_NAME}.")
+    st.subheader("Datos cargados:")
     st.dataframe(df_datos)
     
-    # Opcional: Muestra un valor específico para confirmar
-    st.write(f"Nombre del primer registro: **{df_datos['nombres'][0]}**")
-
-except Exception as e:
-    # Mensaje de error más detallado
-    st.error(f"¡Error! Revisa que el Secret, el ID y el nombre de la hoja ('{WORKSHEET_NAME}') sean correctos. Detalle: {e}")
+    # Muestra un valor de prueba para confirmar la lectura de la columna
+    try:
+        st.info(f"El valor de la columna 'nombres' del primer registro es: **{df_datos['nombres'].iloc[0]}**")
+    except KeyError:
+        st.warning("Verifica que la columna 'nombres' exista exactamente con ese nombre en la primera fila de tu hoja.")
