@@ -9,6 +9,7 @@ import os
 # ID de tu hoja de cálculo (reemplaza si es necesario)
 SPREADSHEET_ID = "1ffNb-jFqt9S0O2CaUQS59mleOkyOk911EaD2uDaMgVw" 
 # Nombre de la pestaña que contiene los datos de REPOSITORIO
+# 🛑 CORRECCIÓN: Usando el nombre de hoja confirmado por el usuario.
 WORKSHEET_NAME = "REPOSITORIO" 
 
 st.set_page_config(layout="wide")
@@ -27,10 +28,15 @@ def load_data():
         gcp_secrets = st.secrets["gsheets"]
 
         # 2. CREACIÓN DE ARCHIVO TEMPORAL: gspread necesita el JSON de la clave en un archivo
-        # Esto es un patrón de seguridad estándar.
         with tempfile.NamedTemporaryFile(mode="w", delete=False) as temp_json_file:
-            # 🛑 CORRECCIÓN APLICADA AQUÍ: Convertimos el objeto especial (AttrDict) a un dict estándar de Python.
+            # CORRECCIÓN 1: Convertimos el objeto especial (AttrDict) a un dict estándar de Python.
             gcp_secrets_dict = dict(gcp_secrets)
+            
+            # CORRECCIÓN 2 (PARA EL ERROR BASE64): Limpiamos la clave privada de espacios/caracteres invisibles
+            if 'private_key' in gcp_secrets_dict:
+                # La función .strip() elimina cualquier espacio, tabulación o salto de línea al inicio y al final.
+                gcp_secrets_dict['private_key'] = gcp_secrets_dict['private_key'].strip()
+
             json.dump(gcp_secrets_dict, temp_json_file)
             temp_filepath = temp_json_file.name
 
@@ -50,7 +56,7 @@ def load_data():
         return df
 
     except gspread.exceptions.WorksheetNotFound:
-        st.error(f"Error: La pestaña '{WORKSHEET_NAME}' no fue encontrada. Revisa que el nombre en Google Sheets sea EXACTO.")
+        st.error(f"Error: La pestaña '{WORKSHEET_NAME}' no fue encontrada. Revisa que el nombre en Google Sheets sea EXACTO ('REPOSITORIO').")
         return pd.DataFrame()
     except gspread.exceptions.SpreadsheetNotFound:
         st.error(f"Error: Hoja de cálculo con ID '{SPREADSHEET_ID}' no encontrada. Revisa el ID.")
