@@ -8,7 +8,7 @@ import os
 # --- VARIABLES DE CONFIGURACIÓN ---
 # ID de tu hoja de cálculo (verificado con tu enlace)
 SPREADSHEET_ID = "1ffNb-jFqt9S0O2CaUQS59mleOkyOk911EaD2uDaMgVw" 
-# Nombre de la pestaña que contiene los datos (actualizado a "hoja1")
+# Nombre de la pestaña que contiene los datos (ACTUALIZADO a "hoja1")
 WORKSHEET_NAME = "hoja1" 
 
 st.set_page_config(layout="wide")
@@ -49,6 +49,7 @@ def load_data():
         worksheet = spreadsheet.worksheet(WORKSHEET_NAME)
         
         # 6. Conversión a DataFrame de Pandas (Lee la primera fila como encabezados)
+        # gspread lee la primera fila como encabezados automáticamente
         data = worksheet.get_all_records()
         df = pd.DataFrame(data)
         
@@ -85,4 +86,4 @@ if not df_datos.empty:
     try:
         st.info(f"El valor de la columna 'nombres' del primer registro es: **{df_datos['nombres'].iloc[0]}**")
     except KeyError:
-        st.warning("Verifica que la columna 'nombres' exista exactamente con ese nombre en la primera fila de tu hoja.")
+        st.warning("Verifica que la columna 'nombres' exista exactamente con ese nombre en la primera fila de tu hoja, y que las columnas estén SEPARADAS.")
