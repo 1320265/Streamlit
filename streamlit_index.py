@@ -6,10 +6,9 @@ import json
 import os 
 
 # --- VARIABLES DE CONFIGURACIÓN ---
-# ID de tu hoja de cálculo (reemplaza si es necesario)
+# ID de tu hoja de cálculo (verificado con tu enlace)
 SPREADSHEET_ID = "1ffNb-jFqt9S0O2CaUQS59mleOkyOk911EaD2uDaMgVw" 
-# Nombre de la pestaña que contiene los datos de REPOSITORIO
-# 🛑 CORRECCIÓN: Usando el nombre de hoja confirmado por el usuario.
+# Nombre de la pestaña que contiene los datos (actualizado a "hoja1")
 WORKSHEET_NAME = "hoja1" 
 
 st.set_page_config(layout="wide")
@@ -56,7 +55,7 @@ def load_data():
         return df
 
     except gspread.exceptions.WorksheetNotFound:
-        st.error(f"Error: La pestaña '{WORKSHEET_NAME}' no fue encontrada. Revisa que el nombre en Google Sheets sea EXACTO ('REPOSITORIO').")
+        st.error(f"Error: La pestaña '{WORKSHEET_NAME}' no fue encontrada. Revisa que el nombre en Google Sheets sea EXACTO ('hoja1').")
         return pd.DataFrame()
     except gspread.exceptions.SpreadsheetNotFound:
         st.error(f"Error: Hoja de cálculo con ID '{SPREADSHEET_ID}' no encontrada. Revisa el ID.")
