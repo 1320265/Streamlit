@@ -29,8 +29,9 @@ def load_data():
         # 2. CREACIÓN DE ARCHIVO TEMPORAL: gspread necesita el JSON de la clave en un archivo
         # Esto es un patrón de seguridad estándar.
         with tempfile.NamedTemporaryFile(mode="w", delete=False) as temp_json_file:
-            # Escribimos los secretos obtenidos en el archivo temporal
-            json.dump(gcp_secrets, temp_json_file)
+            # 🛑 CORRECCIÓN APLICADA AQUÍ: Convertimos el objeto especial (AttrDict) a un dict estándar de Python.
+            gcp_secrets_dict = dict(gcp_secrets)
+            json.dump(gcp_secrets_dict, temp_json_file)
             temp_filepath = temp_json_file.name
 
         # 3. CONEXIÓN: Usa gspread para autenticarse con el archivo temporal
@@ -56,6 +57,7 @@ def load_data():
         return pd.DataFrame()
     except Exception as e:
         # Manejo de otros errores críticos
+        # Si este error persiste, la causa es el formato TOML o permisos.
         st.error(f"Error crítico en la conexión o autenticación. Causas comunes: 1) Formato TOML del secret incorrecto. 2) El email de la cuenta de servicio no tiene permiso de lectura en Google Sheets. Detalle: {e}")
         return pd.DataFrame()
     
